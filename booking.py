@@ -6,7 +6,7 @@ import re
 
 
 def wait_url_change(driver, timeout=600, match=None):
-    logging.debug(f'Waiting for URL change. timeout={timeout}s, match={match}')
+    logging.debug(f"Waiting for URL change. timeout={timeout}s, match={match}")
     old_url = driver.current_url
     WebDriverWait(driver, timeout).until(
         lambda driver: old_url != driver.current_url
@@ -18,7 +18,7 @@ def wait_url_change(driver, timeout=600, match=None):
 
 
 def fill_checkout_form(driver, firstname, lastname, phone):
-    logging.info('Filling checkout form')
+    logging.info("Filling checkout form")
     driver.find_element_by_xpath(
         '//*[@id="processingprompts_dailyfirstname"]'
     ).send_keys(firstname)
@@ -30,6 +30,15 @@ def fill_checkout_form(driver, firstname, lastname, phone):
     )
 
 
+def fill_confirmation_form(driver, email):
+    driver.find_element_by_xpath('//*[@id="webconfirmation_emailreceipt"]').send_keys(
+        email
+    )
+    driver.find_element_by_xpath('//*[@id="webconfirmation_buttonsumbit"]').click()
+    wait_url_change(driver)
+    logging.info("Confirmation sent to {email}")
+
+
 @click.command()
 @click.argument("firstname")
 @click.argument("lastname")
@@ -38,24 +47,17 @@ def fill_checkout_form(driver, firstname, lastname, phone):
 def main(firstname, lastname, phone, email):
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("root").setLevel(logging.DEBUG)
-    #logging.getLogger("selenium.webdriver.remote.remote_connection").setLevel(logging.WARNING)
-    #logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
     with webdriver.Firefox() as driver:
         driver.get(
             "https://web2.vermontsystems.com/wbwsc/txaustinwt.wsc/search.html?display=detail&module=GR"
         )
-
-        wait_url_change(driver, match=r'addtocart\.html')
-
+        wait_url_change(driver, match=r"addtocart\.html")
         fill_checkout_form(driver, firstname, lastname, phone)
+        # User must now click "One click to finish"
 
-        wait_url_change(driver)
-        # TODO
-        # - wait for url change to one click page
-        # - fill out email on next page
-        # - submit form and close with success message in console
-
+        wait_url_change(driver, match=r"confirmation\.html")
+        fill_confirmation_form(driver, email)
 
 
 if __name__ == "__main__":
