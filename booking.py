@@ -37,7 +37,7 @@ def fill_confirmation_form(driver, email):
         email
     )
     driver.find_element_by_xpath('//*[@id="webconfirmation_buttonsumbit"]').click()
-    logger.info("Confirmation sent to {email}")
+    logger.info(f"Confirmation sent to {email}")
 
 
 @click.command()
@@ -55,7 +55,7 @@ def main(firstname, lastname, phone, email):
         )
         wait_url_change(driver, match=r"addtocart\.html")
         fill_checkout_form(driver, firstname, lastname, phone)
-        # User must now click "One click to finish"
+        logger.info('Waiting for click: "One click to finish"')
 
         wait_url_change(driver, match=r"confirmation\.html")
         fill_confirmation_form(driver, email)
